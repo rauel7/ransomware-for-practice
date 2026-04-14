@@ -1,0 +1,27 @@
+#!/bin/bash
+objekt=$(find ~/ -name "fake_ransomware.sh")
+
+#set up log
+logfile="/home/web/fake_ransomware.log"
+log() {
+        level=$1
+        shift 
+        user=$USER
+        echo "$(date -Iseconds) [$0] [$level] [user:$user] $*" >> "$logfile"
+}
+log INFO "script started"
+
+#define the ransomware to get deletet
+objekt=$(find ~/ -name "fake_ransomware.sh")
+
+#delete the ransomware and log the succes
+log INFO "shred startet"
+sudo shred -u $objekt
+if [ -f "$objekt" ]; then
+        log INFO "data shreded"
+else
+        log ERROR "data can´t be shredded"
+fi
+
+
+sudo shred -u $objekt
